@@ -2,8 +2,13 @@ import PIL
 import matplotlib.pyplot as plt # single use of plt is commented out
 import os.path  
 import PIL.ImageDraw
+import PIL.ImageFont
 '''
-# Open the files in the same directory as the Python script
+First test code trying to use code from 1.4.4 to try to get an image to paste 
+on top of another image. But I could not figure out how to get it to work with
+the working directory so I started over.'''
+
+'''# Open the files in the same directory as the Python script
 directory = os.getcwd() # Use working directory if unspecified
 student = os.path.join(directory, 'student.jpg')
 
@@ -13,7 +18,6 @@ logo_small = logo_img.resize((89, 87)) #eye width and height measured in pl
 
 # Paste earth into right eye and display
 student_img.paste(logo_small, (100, 100), mask=logo_small) 
-
 
  # Make the new image, starting with all transparent
 image_copy= student_img.copy()
@@ -46,7 +50,6 @@ def frame_logo(original_image, color, frame_width):
     # Overwrite the RGBA values with A=255.
     # The 127 for RGB values was used merely for visualizing the mask
     
-    
     # Draw two rectangles to fill interior with opaqueness
     drawing_layer.rectangle((0,0,width,thickness), fill=(r,g,b,255)) #top rectangle
     drawing_layer.rectangle((0,0,thickness,height), fill=(r,g,b,255))  
@@ -55,29 +58,39 @@ def frame_logo(original_image, color, frame_width):
     # Uncomment the following line to show the mask
     # plt.imshow(rounded_mask)
     
-    
-    # Make the new image, starting with all transparent
+    #Make the new image, starting with all transparent
     result = original_image.copy()
-    result.paste(frame_mask, (0,0), mask=frame_mask)
+    #result.paste(frame_mask, (0,0), mask=frame_mask)
     
+    '''
+    Creates text_mask with the orginal size of the image that way it can be used
+    for every image. Then draws that text on a mask and pastes over orginal
+    image inside the frame on the bottom left side.
+    '''
+    text_mask = PIL.Image.new('RGBA', original_image.size, (255,255,255,0))
+    font = PIL.ImageFont.truetype('Arial.ttf', thickness)
+    d = PIL.ImageDraw.Draw(text_mask)
+    d.text((0,0), "Cerulean Designs", font=font, fill=(0,123,167,255))
+    result.paste(text_mask, (thickness,height-2*thickness), mask=text_mask)
+    
+    #Makes mask for frame and pastes over top of image
     use_decorative_frame = True
     if use_decorative_frame: 
         frame_pic = PIL.Image.open(os.path.join(os.getcwd(), 'frame.jpg'))
         frame_pic = frame_pic.resize(result.size)
         result.paste(frame_pic, (0,0), mask=frame_mask)
     else:
-        result.paste(frame_mask, (0,0), mask=frame_mask)
-    
-    # Logo Mask
-    # Resize to the thickness x thickness of frame to scale to the size of the image
-    directory = os.getcwd() # Use working directory if unspecified
-    
+       result.paste(frame_mask, (0,0), mask=frame_mask)
+
+    '''
+    Starts by using the current working directory inorder to find logo.png.
+    Then creates a logo mask with logo.png and resizes it to the 
+    (thickness x thickness) that way it fits inside the frame of each image. 
+    Then pastes logo_small on the bottom right of the image inside the frame.'''
+    directory = os.getcwd() # Use working directory to get logo.png f
     logo_file = os.path.join(directory, 'logo.png')
     logo_img = PIL.Image.open(logo_file)
     logo_small = logo_img.resize((thickness, thickness)) #eye width and height measured in plt
-
-
-    #Paste logo.png on the bottom right of the image
     result.paste(logo_small, (width-thickness, height-thickness), mask=logo_small)
     
     return result
@@ -108,7 +121,7 @@ def get_images(directory=None):
             pass # do nothing with errors tying to open non-images
     return image_list, file_list
 
-def logo_on_images(directory=None, color=(0,0,0), frame_width=0.075):
+def frame_logo_text_on_images(directory=None, color=(0,0,0), frame_width=0.075):
     """ Saves a modfied version of each image in directory.
     
     Uses current directory if no directory is specified. 
@@ -119,8 +132,8 @@ def logo_on_images(directory=None, color=(0,0,0), frame_width=0.075):
     if directory == None:
         directory = os.getcwd() # Use working directory if unspecified
         
-    # Create a new directory 'modified'
-    new_directory = os.path.join(directory, 'testing-version-1')
+    # Create a new directory 'Cerulean Designs Final Images'
+    new_directory = os.path.join(directory, 'Cerulean Designs Final Images-1')
     try:
         os.mkdir(new_directory)
     except OSError:
